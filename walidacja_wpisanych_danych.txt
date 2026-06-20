@@ -1,0 +1,42 @@
+-- 1. Weryfikacja logiki dat - Powinno zwrócić 0 rekordów
+SELECT * FROM Historia_zatrudnienia
+WHERE data_zakonczenia IS NOT NULL
+  AND data_zakonczenia < data_zatrudnienia;
+
+-- 2. Sprawdzenie reguły XOR - Powinno zwrócić 0 rekordów
+SELECT ID_paczki, numer_skrytki_ID, numer_kursu_ID, numer_magazynu_ID
+FROM Paczka
+WHERE
+    (CASE WHEN numer_skrytki_ID IS NOT NULL THEN 1 ELSE 0 END +
+     CASE WHEN numer_kursu_ID IS NOT NULL THEN 1 ELSE 0 END +
+     CASE WHEN numer_magazynu_ID IS NOT NULL THEN 1 ELSE 0 END) > 1
+    OR
+    (numer_skrytki_ID IS NULL AND numer_kursu_ID IS NULL AND numer_magazynu_ID IS NULL);
+
+-- 3. Sprawdzenie spójności statusów - Powinno zwrócić 0 rekordów
+SELECT p.ID_paczki, sp.status_paczki, p.numer_skrytki_ID
+FROM Paczka p
+JOIN Historia_paczki hp ON p.ID_paczki = hp.numer_paczki_ID
+JOIN Status_paczki sp ON hp.status_paczki_ID = sp.ID_statusu_paczki
+WHERE hp.data_ustawienia = (SELECT MAX(data_ustawienia) FROM Historia_paczki WHERE numer_paczki_ID = p.ID_paczki)
+  AND sp.status_paczki = 'Odebrana'
+  AND p.numer_skrytki_ID IS NOT NULL;
+
+-- 4. Sprawdzenie kompletności danych pracownika
+SELECT ID_pracownika, imie, nazwisko
+FROM Pracownicy
+WHERE oddzialy_skrot_ID IS NULL;
+
+-- 5. Sprawdzenie kompletności danych paczki
+SELECT COUNT(*) AS paczki_bez_gabarytu
+FROM Paczka
+WHERE gabaryt_paczki_ID IS NULL;
+
+-- 6. Weryfikacja finansowa
+SELECT MIN(kwota) AS min_kwota, AVG(kwota) AS srednia_kwota, MAX(kwota) AS max_kwota
+FROM Platnosc;
+
+-- 7. Walidacja formatu kodów pocztowych - Powinno zwrócić 0 rekordów
+SELECT ID_adres, kod_pocztowy
+FROM Adres
+WHERE NOT REGEXP_LIKE(kod_pocztowy, '^[0-9]{2}-[0-9]{3}$');

@@ -1,0 +1,44 @@
+CREATE OR REPLACE VIEW V_KLIENCI_RODO AS
+SELECT 
+    ID_klienta,
+    imie,
+    nazwisko,
+    email,
+    telefon
+FROM Klienci;
+INSERT INTO V_KLIENCI_RODO (ID_klienta, imie, nazwisko, email, telefon)
+VALUES (300, 'Nowy', 'Uzytkownik', 'nowy@test.pl', '123456789');
+
+CREATE OR REPLACE VIEW V_AKTUALNY_STATUS_PACZKI AS
+SELECT 
+    ID_paczki,
+    status_paczki,
+    data_ustawienia AS data_ostatniej_zmiany
+FROM (
+    SELECT 
+        p.ID_paczki,
+        sp.status_paczki,
+        hp.data_ustawienia,
+        ROW_NUMBER() OVER (PARTITION BY p.ID_paczki ORDER BY hp.data_ustawienia DESC) as rn
+    FROM Paczka p
+    JOIN Historia_paczki hp ON p.ID_paczki = hp.numer_paczki_ID
+    JOIN Status_paczki sp ON hp.status_paczki_ID = sp.ID_statusu_paczki
+)
+WHERE rn = 1;
+select * from v_aktualny_status_paczki;
+
+CREATE OR REPLACE VIEW V_ZALEGLE_PLATNOSCI AS
+SELECT 
+    pl.ID_platnosci,
+    pl.kwota,
+    pl.data_platnosci,
+    sp.status_platnosci,
+    k.imie || ' ' || k.nazwisko AS Klient,
+    k.email,
+    k.telefon
+FROM Platnosc pl
+JOIN Status_platnosci sp ON pl.status_platnosci_ID = sp.ID_statusu_platnosci
+JOIN Zamowienia z ON pl.numer_zamowienia_ID = z.ID_zamowienia
+JOIN Klienci k ON z.nadawca_ID = k.ID_klienta
+WHERE sp.status_platnosci IN ('Nieoplacona', 'Zwrot');
+select * from v_zalegle_platnosci;

@@ -1,0 +1,37 @@
+SELECT p.imie, p.nazwisko, p.telefon, p.wynagrodzenie, s.stanowisko, o.skrot_oddzailu, o.wojewodztwo FROM Pracownicy p JOIN Stanowisko s ON p.stanowisko_ID = s.ID_stanowiska JOIN Oddzialy o ON p.oddzialy_skrot_ID = o.skrot_oddzailu ORDER BY o.wojewodztwo, p.nazwisko; 
+
+SELECT poj.numer_VIN, mar.marka, mod.model_auta, typ.typ_pojazdu, pal.rodzaj_paliwa, mod.ladownosc FROM Pojazdy poj JOIN Dane_techniczne dt ON poj.dane_techniczne_ID = dt.ID_dane_techniczne JOIN Model mod ON dt.model_ID = mod.ID_modelu JOIN Marki mar ON mod.marka_ID = mar.ID_marki JOIN Typ_pojazdu typ ON mod.typ_pojazdu_ID = typ.ID_typ_pojazdu JOIN Paliwa pal ON dt.paliwo_ID = pal.ID_paliwa; 
+
+SELECT sp.status_paczki, COUNT(h.ID_historii_paczki) AS ilosc_paczek FROM Historia_paczki h JOIN Status_paczki sp ON h.status_paczki_ID = sp.ID_statusu_paczki WHERE h.data_ustawienia = ( SELECT MAX(h2.data_ustawienia) FROM Historia_paczki h2 WHERE h2.numer_paczki_ID = h.numer_paczki_ID ) GROUP BY sp.status_paczki ORDER BY ilosc_paczek DESC; 
+
+SELECT mp.metoda_platnosci, COUNT(pl.ID_platnosci) AS ilosc_transakcji, SUM(pl.kwota) AS suma_wplat FROM Platnosc pl
+JOIN Metody_platnosci mp ON pl.metoda_platnosci_ID = mp.ID_met_platnosci
+JOIN Status_platnosci sp ON pl.status_platnosci_ID = sp.ID_statusu_platnosci
+WHERE sp.status_platnosci = 'Oplacona'
+GROUP BY mp.metoda_platnosci;
+
+SELECT p.ID_paczki, gab.typ_paczki AS gabaryt, CASE WHEN p.numer_skrytki_ID IS NOT NULL THEN 'W Paczkomacie (Skrytka ' || p.numer_skrytki_ID || ')' WHEN p.numer_kursu_ID IS NOT NULL THEN 'W Kursie (ID: ' || p.numer_kursu_ID || ')' WHEN p.numer_magazynu_ID IS NOT NULL THEN 'W Magazynie (ID: ' || p.numer_magazynu_ID || ')' ELSE 'Nieznana lokalizacja / Nadana' END AS aktualna_lokalizacja, sp.status_paczki FROM Paczka p JOIN Gabaryty gab ON p.gabaryt_paczki_ID = gab.ID_gabarytu LEFT JOIN Historia_paczki hp ON p.ID_paczki = hp.numer_paczki_ID LEFT JOIN Status_paczki sp ON hp.status_paczki_ID = sp.ID_statusu_paczki WHERE hp.data_ustawienia = (SELECT MAX(data_ustawienia) FROM Historia_paczki WHERE numer_paczki_ID = p.ID_paczki);
+
+SELECT p.imie, p.nazwisko, p.wynagrodzenie, s.stanowisko FROM Pracownicy p JOIN Stanowisko s ON p.stanowisko_ID = s.ID_stanowiska ORDER BY p.wynagrodzenie DESC; 
+
+SELECT ID_paczki, gabaryt_paczki_ID FROM Paczka WHERE punkt_odbioru_ID = 10; 
+
+SELECT imie, nazwisko, telefon FROM Pracownicy WHERE oddzialy_skrot_ID = 'MAZ'; 
+
+SELECT sp.status_paczki, hp.data_ustawienia FROM Historia_paczki hp JOIN Status_paczki sp ON hp.status_paczki_ID = sp.ID_statusu_paczki WHERE hp.numer_paczki_ID = 17 ORDER BY hp.data_ustawienia ASC; 
+
+SELECT pt.kolejnosc, pt.magazyn_ID, pt.punkty_odbioru_ID, rt.rodzaj_trasy FROM Punkty_trasy pt JOIN Trasa t ON pt.trasa_ID = t.ID_trasy JOIN Rodzaj_trasy rt ON t.rodzaj_trasy_ID = rt.ID_rodzaj_trasy WHERE pt.trasa_ID = 7 ORDER BY pt.kolejnosc ASC; 
+
+SELECT s.ID_skrytki, s.kolumna, s.wiersz, po.dodatkowe_informacje AS nazwa_punktu, m.miejscowosc, a.ulica, a.nr_budynku, a.nr_mieszkania FROM Skrytka s JOIN Gabaryty g ON s.gabaryt_ID = g.ID_gabarytu JOIN Status_skrytki ss ON s.status_skrytki_ID = ss.ID_statusu_skrytki JOIN Punkty_odbioru po ON s.punkt_odbioru_ID = po.ID_punktu_odbioru JOIN Adres a ON po.adres_ID = a.ID_adres JOIN Miejscowosc m ON a.miejscowosc_ID = m.ID_miejscowosci WHERE g.typ_paczki = 'A' AND ss.status_skrytki = 'Wolna' AND po.ID_punktu_odbioru = 1; 
+
+SELECT o.wojewodztwo, o.skrot_oddzailu AS oddzial, COUNT(DISTINCT p.ID_pracownika) AS liczba_zatrudnionych,
+    COUNT(DISTINCT k.ID_kursu) AS zrealizowane_kursy, COUNT(pac.ID_paczki) AS dostarczone_paczki,
+    SUM(pl.kwota) AS laczny_przychod
+FROM Oddzialy o
+JOIN Pracownicy p ON o.skrot_oddzailu = p.oddzialy_skrot_ID
+LEFT JOIN Kurs k ON p.ID_pracownika = k.pracownik_ID
+LEFT JOIN Paczka pac ON k.ID_kursu = pac.numer_kursu_ID
+LEFT JOIN Zamowienia z ON pac.zamowienie_ID = z.ID_zamowienia
+LEFT JOIN Platnosc pl ON z.ID_zamowienia = pl.numer_zamowienia_ID
+GROUP BY o.wojewodztwo, o.skrot_oddzailu
+ORDER BY SUM(pl.kwota) DESC NULLS LAST;

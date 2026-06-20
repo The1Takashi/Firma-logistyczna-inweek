@@ -1,0 +1,17 @@
+INSERT INTO Pracownicy (ID_pracownika, imie, nazwisko, telefon, wynagrodzenie, stanowisko_ID, oddzialy_skrot_ID)
+VALUES (999, 'Test', 'Bledny', '123', 3000, 1, 'MAZ');
+INSERT INTO Pojazdy (ID_pojazdy, numer_VIN, dane_techniczne_ID)
+VALUES (999, '123456789012345I7', 1);
+INSERT INTO Paczka (ID_paczki, zamowienie_ID, gabaryt_paczki_ID, punkt_nadania_ID, punkt_odbioru_ID, numer_skrytki_ID, numer_kursu_ID, numer_magazynu_ID)
+VALUES (999, 1, 1, 1, 1, NULL, 1, 1);
+INSERT INTO Klienci (ID_klienta, imie, nazwisko, email, telefon) 
+VALUES (999, 'Test', 'Bledny', 'niepoprawny@mail.12', '600100999');
+INSERT INTO Zamowienia (ID_zamowienia, data_zlozenia, data_odebrania, nadawca_ID, odbiorca_ID)
+VALUES (999, TO_DATE('2024-02-10', 'YYYY-MM-DD'), TO_DATE('2024-02-09', 'YYYY-MM-DD'), 1, 2);
+DELETE FROM Miejscowosc WHERE ID_miejscowosci = 1;
+UPDATE Paczka 
+SET numer_skrytki_ID = 5 
+WHERE ID_paczki = 11;
+UPDATE Wypozyczenia 
+SET data_zakonczenia = TO_DATE('2023-01-01', 'YYYY-MM-DD') 
+WHERE ID_wypozyczenia = 1;
